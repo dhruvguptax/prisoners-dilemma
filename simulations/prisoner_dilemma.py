@@ -1,3 +1,4 @@
+import os  # Add at top of file
 import matplotlib.pyplot as plt
 
 def payoff(player1, player2):
