@@ -70,14 +70,41 @@ def run_tournament(strategies, rounds=50):
 if __name__ == "__main__":
     plot_outcomes()
     
-    strategies = {
-        'TitForTat': tit_for_tat,
-        'Random': random_strategy,
-        'AlwaysCooperate': always_cooperate,
-        'AlwaysDefect': always_defect
-    }
-    
-    print("\n=== Strategy Tournament ===")
-    results = run_tournament(strategies)
-    for matchup, rate in results.items():
-        print(f"{matchup}: {rate:.1f}% cooperation")
+    print("=== Interactive Prisoner's Dilemma ===")
+    while True:
+        print("\nChoose an option:")
+        print("1. Play manually")
+        print("2. Run strategy tournament")
+        print("3. Exit")
+        
+        choice = input("Enter choice (1-3): ")
+        
+        if choice == '1':
+            p1 = input("Player 1 (cooperate/defect): ").lower()
+            p2 = input("Player 2 (cooperate/defect): ").lower()
+            
+            if p1 not in ['cooperate', 'defect'] or p2 not in ['cooperate', 'defect']:
+                print("Invalid choice! Must choose 'cooperate' or 'defect'")
+                continue
+                
+            result = payoff(p1, p2)
+            print(f"\nPlayer 1 gets {result[0]} years")
+            print(f"Player 2 gets {result[1]} years")
+            
+        elif choice == '2':
+            strategies = {
+                'TitForTat': tit_for_tat,
+                'Random': random_strategy,
+                'AlwaysCooperate': always_cooperate,
+                'AlwaysDefect': always_defect
+            }
+            print("\n=== Strategy Tournament Results ===")
+            results = run_tournament(strategies)
+            for matchup, rate in results.items():
+                print(f"{matchup}: {rate:.1f}% cooperation")
+                
+        elif choice == '3':
+            break
+            
+        else:
+            print("Invalid choice! Please enter 1, 2, or 3")
