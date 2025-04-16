@@ -14,6 +14,9 @@ def payoff(player1, player2):
 def plot_outcomes():
     outcomes = ['CC', 'CD', 'DC', 'DD']
     scores = [3, 0, 5, 1]
+
+    if not os.path.exists('data'):
+        os.makedirs('data')
     
     plt.bar(outcomes, scores, color=['green', 'red', 'blue', 'gray'])
     plt.title("Prisoner's Dilemma Outcomes (Player 1)")
