@@ -76,3 +76,10 @@ if __name__ == "__main__":
         print(f"Player 1: {p1_score} years | Player 2: {p2_score} years")
     
     print("\n📊 Check the 'data' folder for outcome visualization!")
+
+STRATEGIES = {
+    'tit_for_tat': lambda history: 'cooperate' if not history else history[-1][1],
+    'always_defect': lambda _: 'defect',
+    'random': lambda _: random.choice(['cooperate', 'defect'])
+}
+
