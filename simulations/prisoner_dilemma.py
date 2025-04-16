@@ -1,85 +1,83 @@
-
 import matplotlib.pyplot as plt
-import os
-from pathlib import Path
 import random
+from pathlib import Path
 
-def payoff(player1, player2):
-    """Returns tuple of (p1_score, p2_score)"""
+def payoff(p1, p2):
     outcomes = {
         ('cooperate', 'cooperate'): (3, 3),
         ('cooperate', 'defect'): (0, 5),
         ('defect', 'cooperate'): (5, 0),
         ('defect', 'defect'): (1, 1)
     }
-    return outcomes[(player1, player2)]
+    return outcomes[(p1, p2)]
+
+def tit_for_tat(history):
+    return 'cooperate' if not history else history[-1][1]
+
+def random_strategy(_):
+    return random.choice(['cooperate', 'defect'])
+
+def always_cooperate(_):
+    return 'cooperate'
+
+def always_defect(_):
+    return 'defect'
 
 def plot_outcomes():
-    """Generates and saves outcome visualization"""
     project_root = Path(__file__).parent.parent
     data_dir = project_root / 'data'
-    data_dir.mkdir(exist_ok=True)  
+    data_dir.mkdir(exist_ok=True)
     
     outcomes = ['CC', 'CD', 'DC', 'DD']
-    p1_scores = [3, 0, 5, 1]
+    scores = [3, 0, 5, 1]
     
-    plt.figure(figsize=(10, 6))
-    bars = plt.bar(outcomes, p1_scores, color=['green', 'red', 'blue', 'grey'])
-    plt.title("Prisoner's Dilemma Outcomes (Player 1 Perspective)", pad=20)
-    plt.ylabel('Years in Prison')
-    plt.ylim(0, 6)
+    plt.style.use('ggplot')
+    fig, ax = plt.subplots(figsize=(10,6))
+    bars = ax.bar(outcomes, scores, color=['#4c72b0','#dd8452','#55a868','#c44e52'])
+    ax.set_title('Prisoner\'s Dilemma Outcomes', pad=20)
+    ax.set_ylabel('Years in Prison')
+    ax.grid(True, alpha=0.3)
     
-   
     for bar in bars:
         height = bar.get_height()
-        plt.text(bar.get_x() + bar.get_width()/2., height,
-                 f'{height}',
-                 ha='center', va='bottom')
+        ax.text(bar.get_x() + bar.get_width()/2., height, f'{height}', ha='center', va='bottom')
     
-    output_path = data_dir / 'pd_outcomes.png'
-    plt.savefig(output_path)
+    plt.savefig(data_dir / 'pd_outcomes.png', dpi=120, bbox_inches='tight')
     plt.close()
-    print(f"Saved plot to: {output_path}")
 
-def simulate_rounds(num_rounds=100):
-    """Simulates random choices between two players"""
-    results = []
-    for _ in range(num_rounds):
-        p1 = random.choice(['cooperate', 'defect'])
-        p2 = random.choice(['cooperate', 'defect'])
-        results.append(payoff(p1, p2))
+def simulate_rounds(strategy1, strategy2, rounds=100):
+    history = []
+    for _ in range(rounds):
+        p1 = strategy1(history)
+        p2 = strategy2(history)
+        result = payoff(p1, p2)
+        history.append((p1, p2, result))
+    return history
+
+def cooperation_rate(history):
+    coop = sum(1 for round in history if round[0] == 'cooperate')
+    return coop / len(history) * 100
+
+def run_tournament(strategies, rounds=50):
+    results = {}
+    for s1 in strategies:
+        for s2 in strategies:
+            history = simulate_rounds(strategies[s1], strategies[s2], rounds)
+            key = f"{s1} vs {s2}"
+            results[key] = cooperation_rate(history)
     return results
 
 if __name__ == "__main__":
-   
     plot_outcomes()
     
+    strategies = {
+        'TitForTat': tit_for_tat,
+        'Random': random_strategy,
+        'AlwaysCooperate': always_cooperate,
+        'AlwaysDefect': always_defect
+    }
     
-    print("\n🎮 Prisoner's Dilemma Simulator 🎮")
-    print("----------------------------------")
-    
-    while True:
-        p1 = input("\nPlayer 1 decision (cooperate/defect/q to quit): ").lower()
-        if p1 == 'q':
-            break
-            
-        p2 = input("Player 2 decision (cooperate/defect/q to quit): ").lower()
-        if p2 == 'q':
-            break
-
-        if p1 not in ['cooperate', 'defect'] or p2 not in ['cooperate', 'defect']:
-            print("⚠️ Invalid input! Must choose 'cooperate' or 'defect'")
-            continue
-
-        p1_score, p2_score = payoff(p1, p2)
-        print(f"\n🔍 Results:")
-        print(f"Player 1: {p1_score} years | Player 2: {p2_score} years")
-    
-    print("\n📊 Check the 'data' folder for outcome visualization!")
-
-STRATEGIES = {
-    'tit_for_tat': lambda history: 'cooperate' if not history else history[-1][1],
-    'always_defect': lambda _: 'defect',
-    'random': lambda _: random.choice(['cooperate', 'defect'])
-}
-
+    print("\n=== Strategy Tournament ===")
+    results = run_tournament(strategies)
+    for matchup, rate in results.items():
+        print(f"{matchup}: {rate:.1f}% cooperation")
